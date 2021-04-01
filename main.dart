@@ -1,107 +1,100 @@
 class SemyonDB implements Database {
-  List<Collection> collections = [];
+  Map<String, Table> tables = {};
 
-  List<Collection> getCollections() {
-    return collections;
+  Map<String, Table> getTables() {
+    return tables;
   }
 
-  void addCollection(String collectionName) {
-    var collection = Collection(collectionName);
-    collections.add(collection);
-  }
-
-  List<Row> readCollection(String name) {
-    var collection = findCollection(name);
-    if (collection != null) {
-      return collection.rows;
+  void addTable(String tableName) {
+    if (tables[tableName] == null) {
+      Table table = Table(tableName);
+      tables[tableName] = table;
+      return;
     }
+    print("table $tableName already exists");
   }
 
-  void removeCollection(String collectionName) {
-    var collection = findCollection(collectionName);
-  }
-
-  void addRow(String collectionName, Row row) {
-    var collection = findCollection(collectionName);
-    if (collection != null) {
-      collection.rows.add(row);
+  List<Row> readTable(String name) {
+    Table table = tables[name];
+    if (table == null) {
+      return null;
     }
+    return table.rows;
   }
 
-  Row readRow(String collectionName, String rowId) {
-    var collection = findCollection(collectionName);
-    ;
-    if (collection != null) {
-      var row = findRow(collection, rowId);
-      if (row != null) {
-        return row;
-      }
+  void removeTable(String tableName) {
+    tables.remove(tableName);
+  }
+
+  void addRow(String tableName, Row row) {
+    if (tables[tableName] == null) {
+      return;
     }
+    tables[tableName].rows.add(row);
   }
 
-  Row findRow(Collection collection, String rowId) {
-    var row;
-    for (row in collection.rows) {
+  Row readRow(String tableName, String rowId) {
+    Table table = tables[tableName];
+    if (table == null) {
+      return null;
+    }
+    Row row = findRow(table, rowId);
+    if (row == null) {
+      return null;
+    }
+    return row;
+  }
+
+  Row findRow(Table table, String rowId) {
+    for (Row row in table.rows) {
       if (row.id == rowId) {
         return row;
       }
     }
-  }
-
-  Collection findCollection(String collectionName) {
-    var collection;
-    for (collection in collections) {
-      if (collection.name == collectionName) {
-        return collection;
-      }
-      return collection;
-    }
+    return null;
   }
 }
 
-// Table
-class Collection {
+class Table {
   String name;
-  List<Row> rows;
-  Collection(this.name);
+  List<Row> rows = [];
+  Table(this.name);
 }
 
 class Row {
   String id;
-  List<Cage> cages;
-  Row(this.id, this.cages);
+  List<Field> fields;
+  Row(this.id, this.fields);
 }
 
-class Cage {
+class Field {
   String key;
   String value;
-  Cage(this.key, this.value);
+  Field(this.key, this.value);
 }
 
 class Database {
-  List<Collection> getCollections() {}
+  Map<String, Table> getTables() {}
 
-  void addCollection(String collectionName) {}
+  void addTable(String tableName) {}
 
-  List<Row> readCollection(String name) {}
+  List<Row> readTable(String name) {}
 
-  void removeCollection(String collectionName) {}
+  void removeTable(String tableName) {}
 
-  void addRow(String collectionName, Row row) {}
+  void addRow(String tableName, Row row) {}
 
-  Row readRow(String collectionName, String rowId) {}
-
-  Collection findCollection(String collectionName) {}
+  Row readRow(String tableName, String rowId) {}
 }
 
 void main() {
   Database db = SemyonDB();
 
-  db.addCollection("stories");
-  var cage1 = Cage("name", "Supername");
-  var cage2 = Cage("author", "Dima");
-  var cages = [cage1, cage2];
-  var story1 = Row("1", cages);
+  db.addTable("stories");
+  var field1 = Field("name", "Supername");
+  var field2 = Field("author", "Dima");
+  var fields = [field1, field2];
+  var story1 = Row("1", fields);
   db.addRow("stories", story1);
 
   // record
