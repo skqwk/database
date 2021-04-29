@@ -1,0 +1,20 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "args",
+      "rootUri": "file:///C:/Users/Maleshen/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/args-2.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "semyondb",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "2.10"
+    }
+  ],
+  "generated": "2021-04-24T10:28:34.034436Z",
+  "generator": "pub",
+  "generatorVersion": "2.14.0-37.0.dev"
+}

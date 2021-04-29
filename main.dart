@@ -1,40 +1,56 @@
+import 'package:args/args.dart';
+import 'dart:io';
+
 class SemyonDB implements Database {
-  Map<String, Table> tables = {};
+  //lock - to control streams
+  Map<String, Table> _tables = {}; // private field
+  final String _directory = "DB/";
+  Map<String, Table> getTables() => Map.unmodifiable(_tables); // safely
 
-  Map<String, Table> getTables() {
-    return tables;
-  }
-
-  void addTable(String tableName) {
-    if (tables[tableName] == null) {
+  void addTable(String tableName) async {
+    if (_tables[tableName] == null) {
       Table table = Table(tableName);
-      tables[tableName] = table;
+      var tableFile = await File(_directory + tableName + ".txt")
+          .create(recursive: true); // create file for a table
+      print(tableFile.path);
+      _tables[tableName] = table;
       return;
     }
-    print("table $tableName already exists");
+    throw "table $tableName already exists";
   }
 
   List<Row> readTable(String name) {
-    Table table = tables[name];
+    Table table = _tables[name];
     if (table == null) {
       return null;
     }
-    return table.rows;
+    return List.unmodifiable(table.rows); // safely
   }
 
-  void removeTable(String tableName) {
-    tables.remove(tableName);
+  bool removeTable(String tableName) {
+    _tables.remove(tableName);
+    return true;
   }
 
-  void addRow(String tableName, Row row) {
-    if (tables[tableName] == null) {
+  void addRow(String tableName, Row row) async {
+    if (_tables[tableName] == null) {
       return;
     }
-    tables[tableName].rows.add(row);
+    _tables[tableName].rows.add(row);
+    File tableFile = File(_directory + tableName + ".txt"); // open file
+    String _dataToFile = await tableFile
+        .readAsString(); // read smthg that there existed // дописывать, а не перезаписывать
+    print(_dataToFile);
+    for (Field field in row.fields) {
+      _dataToFile += field.value + " "; // add new row
+    }
+    print(_dataToFile);
+    _dataToFile += "\n";
+    tableFile.writeAsString(_dataToFile); // add fresh data
   }
 
   Row readRow(String tableName, String rowId) {
-    Table table = tables[tableName];
+    Table table = _tables[tableName];
     if (table == null) {
       return null;
     }
@@ -42,7 +58,7 @@ class SemyonDB implements Database {
     if (row == null) {
       return null;
     }
-    return row;
+    return row; // safely, cause fields of class Row is private
   }
 
   Row findRow(Table table, String rowId) {
@@ -56,46 +72,69 @@ class SemyonDB implements Database {
 }
 
 class Table {
-  String name;
-  List<Row> rows = [];
-  Table(this.name);
+  String _name;
+  List<Row> _rows = [];
+
+  String get name => _name;
+  List<Row> get rows => _rows;
+  Table(this._name);
 }
 
 class Row {
-  String id;
-  List<Field> fields;
-  Row(this.id, this.fields);
+  String _id;
+  List<Field> _fields;
+  String get id => _id;
+  List<Field> get fields => _fields;
+  Row(this._id, this._fields);
 }
 
 class Field {
-  String key;
-  String value;
-  Field(this.key, this.value);
+  String _key;
+  String _value;
+  String get key => _key;
+  String get value => _value;
+  Field(this._key, this._value);
 }
 
-class Database {
-  Map<String, Table> getTables() {}
+abstract class Database {
+  Map<String, Table> getTables();
 
-  void addTable(String tableName) {}
+  void addTable(String tableName);
 
-  List<Row> readTable(String name) {}
+  List<Row> readTable(String name);
 
-  void removeTable(String tableName) {}
+  bool removeTable(String tableName);
 
-  void addRow(String tableName, Row row) {}
+  void addRow(String tableName, Row row);
 
-  Row readRow(String tableName, String rowId) {}
+  Row readRow(String tableName, String rowId);
 }
 
-void main() {
-  Database db = SemyonDB();
+Future<void> main() async {
+  var parser = ArgParser();
+  parser.addOption("name");
 
-  db.addTable("stories");
+  print("Hello World");
+
+  //initialization of common db
+  Database db = SemyonDB(); // new DB
+
+  await db.addTable("stories"); // DB -> add Table "Stories"
   var field1 = Field("name", "Supername");
   var field2 = Field("author", "Dima");
-  var fields = [field1, field2];
-  var story1 = Row("1", fields);
-  db.addRow("stories", story1);
+  // initialization field1, field2
+  var fields1 = [field1, field2]; // group fields to list of fields
+
+  var field3 = Field("name", "Supername");
+  var field4 = Field("author", "Semyon");
+
+  var fields2 = [field3, field4];
+
+  print("adding row");
+  var story1 = Row("1", fields1); // new Row == group of fields with name
+  var story2 = Row("2", fields2);
+  await db.addRow("stories", story1); // DB -> Table "Stories"-> add Row
+  await db.addRow("stories", story2);
 
   // record
 

@@ -1,0 +1,10 @@
+name: semyondb
+version: 0.0.1
+homepage: https://github.com/skqwk/database
+description: >-
+  Library for database
+environment:
+  sdk: '>=2.10.0 <3.0.0'
+
+dependencies:
+  args: ^2.1.0
